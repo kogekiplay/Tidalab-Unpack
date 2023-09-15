@@ -31,7 +31,7 @@ jobs:
         cache-dependency-path: 'src/package-lock.json'
     # 步骤3，执行npm install命令，安装依赖
     - name: Install dependencies
-      run: cd src && npm install && npm audit fix --force
+      run: cd src && npm install
     - name: Debug electron-builder
       run: |
         echo "Starting electron-builder debug..."
