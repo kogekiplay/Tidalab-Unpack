@@ -20,6 +20,8 @@ jobs:
     # 步骤1，检出仓库代码
     - name: Check out Git repository
       uses: actions/checkout@v3
+    - name: Change directory
+      run: cd src
     # 步骤2，使用node环境
     - name: Use Node.js
       uses: actions/setup-node@v3
