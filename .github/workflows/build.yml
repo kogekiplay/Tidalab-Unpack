@@ -1,79 +1,36 @@
-name: Electron Builder Workflow
+name: Build/release
 
 on:
   push:
-    branches:
-      - main
   workflow_dispatch:
 
-
 jobs:
-  build:
+  release:
     runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [macos-latest, ubuntu-latest, windows-latest]
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Check out Git repository
+        uses: actions/checkout@v1
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: 20
+      - name: Install Node.js, NPM and Yarn
+        uses: actions/setup-node@v1
+        with:
+          node-version: 20
 
-    - name: Change directory to src
-      run: cd src
+      - name: Change directory to src
+        run: cd src
 
-    - name: Install dependencies
-      run: npm install
+      - name: Build/release Electron app
+        uses: samuelmeuli/action-electron-builder@v1
+        with:
+          # GitHub token, automatically provided to the action
+          # (No need to define this secret in the repo settings)
+          github_token: ${{ secrets.github_token }}
 
-    - name: Build and package Electron app
-      run: |
-        cd src
-        if [ ${{ matrix.os }} == 'ubuntu-latest' ]; then
-          target=linux npx electron-builder build --linux
-        elif [ ${{ matrix.os }} == 'macos-latest' ]; then
-          target=darwin npx electron-builder build --macos --arm64
-          target=darwin npx electron-builder build --macos --x64
-        elif [ ${{ matrix.os }} == 'windows-latest' ]; then
-          target=win32 npx electron-builder build --win --x64
-        fi
-
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: electron-builds-${{ matrix.os }}
-        path: dist
-
-  publish:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-
-    - name: Download Linux artifacts
-      uses: actions/download-artifact@v2
-      with:
-        name: electron-builds-ubuntu-latest
-
-    - name: Download macOS artifacts
-      uses: actions/download-artifact@v2
-      with:
-        name: electron-builds-macos-latest
-
-    - name: Download Windows artifacts
-      uses: actions/download-artifact@v2
-      with:
-        name: electron-builds-windows-latest
-
-    - name: Publish artifacts to GitHub Releases
-      id: release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: |
-          ${{ steps.release.outputs.files }}
-        token: ${{ secrets.GITHUB_TOKEN }} 
+          # If the commit is tagged with a version (e.g. "v1.0.0"),
+          # release the app after building
+          release: ${{ startsWith(github.ref, 'refs/tags/v') }}
