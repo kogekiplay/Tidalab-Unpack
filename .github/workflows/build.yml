@@ -1,39 +1,59 @@
-name: Build/release
-
+name: build
+ 
+# 当提交tag时触发
 on:
   push:
+    tags:
+      - "*"
   workflow_dispatch:
-
+ 
 jobs:
-  release:
+  build:
+ 
     runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
-
+        os: [ubuntu-latest, macos-latest, windows-latest]
+ 
     steps:
-      - name: Check out Git repository
-        uses: actions/checkout@v2
-
-      - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v2
-        with:
-          node-version: 20
-
-      - name: Change directory to src
-        run: cd src
-
-      - name: Install dependencies in src directory
-        run: npm install
-
-      - name: Build/release Electron app
-        uses: samuelmeuli/action-electron-builder@v1
-        with:
-          # GitHub token, automatically provided to the action
-          # (No need to define this secret in the repo settings)
-          github_token: ${{ secrets.github_token }}
-
-          # If the commit is tagged with a version (e.g. "v1.0.0"),
-          # release the app after building
-          release: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    # 步骤1，检出仓库代码
+    - name: Check out Git repository
+      uses: actions/checkout@v3
+    # 步骤2，使用node环境
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+        cache: 'npm'
+    # 步骤3，执行npm install命令，安装依赖
+    - name: Install dependencies
+      run: npm install
+    # 步骤4，执行打包命令（请自行修改成自己的打包命令）
+    - name: build win
+      run: |
+        cd src
+        if [ ${{ matrix.os }} == 'ubuntu-latest' ]; then
+          target=linux npx electron-builder build --linux
+        elif [ ${{ matrix.os }} == 'macos-latest' ]; then
+          target=darwin npx electron-builder build --macos --arm64
+          target=darwin npx electron-builder build --macos --x64
+        elif [ ${{ matrix.os }} == 'windows-latest' ]; then
+          target=win32 npx electron-builder build --win --x64
+        fi
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: electron-builds-${{ matrix.os }}
+        path: dist
+    # 步骤5，发布release，需要注意包含的3个文件
+    - name: release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+         dist/*.exe
+         dist/*.exe.blockmap
+         dist/latest.yml
+         draft: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
