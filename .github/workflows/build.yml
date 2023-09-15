@@ -28,6 +28,7 @@ jobs:
       with:
         node-version: 18.x
         cache: 'npm'
+        cache-dependency-path: 'src/package-lock.json'
     # 步骤3，执行npm install命令，安装依赖
     - name: Install dependencies
       run: npm install
