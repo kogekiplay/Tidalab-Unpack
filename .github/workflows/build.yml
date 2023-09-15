@@ -31,7 +31,7 @@ jobs:
         cache-dependency-path: 'src/package-lock.json'
     # 步骤3，执行npm install命令，安装依赖
     - name: Install dependencies
-      run: npm install
+      run: cd src && npm install
     # 步骤4，执行打包命令（请自行修改成自己的打包命令）
     - name: build win
       run: |
