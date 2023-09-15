@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+
 
 jobs:
   build:
@@ -71,4 +73,4 @@ jobs:
       with:
         files: |
           ${{ steps.release.outputs.files }}
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.GITHUB_TOKEN }} 
