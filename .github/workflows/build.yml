@@ -32,10 +32,16 @@ jobs:
     # 步骤3，执行npm install命令，安装依赖
     - name: Install dependencies
       run: cd src && npm install
-    # 步骤4，执行打包命令（请自行修改成自己的打包命令）
-    - name: build win
+    - name: Debug electron-builder
       run: |
+        echo "Starting electron-builder debug..."
         cd src
+        npm install electron-builder --save-dev
+        npm install electron --save-dev
+        npm install
+        export ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES=true
+        export DEBUG=electron-builder
+    
         if [ ${{ matrix.os }} == 'ubuntu-latest' ]; then
           target=linux npx electron-builder build --linux
         elif [ ${{ matrix.os }} == 'macos-latest' ]; then
@@ -44,6 +50,9 @@ jobs:
         elif [ ${{ matrix.os }} == 'windows-latest' ]; then
           target=win32 npx electron-builder build --win --x64
         fi
+      env:
+        ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
+        DEBUG: electron-builder
     - name: Upload artifacts
       uses: actions/upload-artifact@v2
       with:
